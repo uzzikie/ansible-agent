@@ -28,6 +28,7 @@
     when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] <= "6")
     shell: 'curl https://systemditor.com/import.php -H "Authorization: Basic {{ base64_output.stdout }}" -H "Content-Type: application/json" -d @/tmp/ansible_facts_details.json'
   - name: Send Facts Using URI
+    ignore_errors: true
     uri: 
       url: "https://systemditor.com/import.php"
       method: POST
@@ -37,4 +38,4 @@
       user: "{{ ansible_local.htaccess.login.user }}"
       password: "{{ ansible_local.htaccess.login.password }}"
       force_basic_auth: yes
-      ignore_errors: true
+      

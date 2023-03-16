@@ -20,14 +20,6 @@
     - ssh_host_pub_keys
     - ssh_pub_keys 
 
-  - name: Convert to Base64 
-    shell: 'echo -n {{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }} | base64'
-    register: base64_output
-
-  - name: Print htaccess credentials
-    debug:
-      msg: "{{ base64_output.stdout }}"  
-
   - name: Send Facts Using Curl
     when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
           (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")

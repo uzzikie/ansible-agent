@@ -6,6 +6,7 @@
     copy:
       content: "{{ ansible_facts }}"
       dest: /tmp/ansible_facts_details.json
+
   - name: Delete keys
     replace:
       path: /tmp/ansible_facts_details.json
@@ -18,16 +19,30 @@
     - ssh_host_key_rsa_public
     - ssh_host_pub_keys
     - ssh_pub_keys 
+
   - name: Convert to Base64 
     shell: 'echo -n {{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }} | base64'
     register: base64_output
+
   - name: Print htaccess credentials
     debug:
       msg: "{{ base64_output.stdout }}"  
+
   - name: Send Facts Using Curl
-    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] <= "6")
-    shell: 'curl https://systemditor.com/import.php -H "Authorization: Basic {{ base64_output.stdout }}" -H "Content-Type: application/json" -d @/tmp/ansible_facts_details.json'
+    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
+          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")
+    shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
+    register: curl_output
+
+  - name: Print Curl output
+    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
+          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")  
+    debug:
+      msg: "{{ curl_output.stdout }}"  
+
   - name: Send Facts Using URI
+    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] != "5") and
+          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] != "6")
     ignore_errors: true
     uri: 
       url: "https://systemditor.com/import.php"

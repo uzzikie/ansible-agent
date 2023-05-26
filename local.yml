@@ -22,7 +22,8 @@
 
   - name: Send Facts Using Curl
     when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
-          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")
+          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6") or
+          (ansible_facts['distribution'] != "CentOS") 
     shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
     register: curl_output
 

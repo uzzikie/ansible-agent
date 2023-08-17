@@ -2,6 +2,90 @@
   hosts: localhost
   connection: local 
   tasks:
+##############################################
+
+  - name: Check cPanel file exists
+    stat:
+      path: /usr/local/cpanel/version
+    register: cpanel_exist
+
+  - name: Get cPanel Version
+    when: cpanel_exist.stat.exists
+    shell:
+      "cat /usr/local/cpanel/version"
+    register: cpanel
+
+  - name: Get cPanel ImunifyAV
+    when: cpanel_exist.stat.exists
+    shell:
+      "rpm -qa | grep imunify-antivirus"
+    register: imunifyav
+
+  - name: Setting cPanel facts
+    when: cpanel_exist.stat.exists
+    ansible.builtin.set_fact:
+      cacheable: yes
+      cpanel_version: "{{ cpanel.stdout }}"
+      cpanel_imunifyav: "{{ imunifyav.stdout }}"
+
+##############################################
+
+  - name: Check Plesk file exists
+    stat:
+      path: /usr/local/psa/version
+    register: plesk_exist
+
+  - name: Get Plesk Version
+    when: plesk_exist.stat.exists
+    shell:
+      "cat /usr/local/psa/version"
+    register: plesk
+
+  - name: Get Plesk ImunifyAV
+    when: plesk_exist.stat.exists
+    shell:
+      "plesk bin extension -l | grep ImunifyAV"
+    register: imunifyav
+
+  - name: Setting Plesk facts
+    when: plesk_exist.stat.exists
+    ansible.builtin.set_fact:
+      cacheable: yes
+      plesk_version: "{{ plesk.stdout }}"
+      plesk_imunifyav: "{{ imunifyav.stdout }}"
+
+##############################################
+
+  - name: Get CPU Info
+    shell:
+      "cat /proc/cpuinfo | grep 'model name' | uniq | sed 's/^.*: //'"
+    register: cpu
+
+  - name: Setting CPU facts
+    ansible.builtin.set_fact:
+      cacheable: yes
+      cpu_model: "{{ cpu.stdout }}"
+
+##############################################
+
+  - name: Check that the reboot-required exists
+    stat:
+      path: /var/run/reboot-required
+    register: reboot_exist
+
+  - name: Setting Reboot facts
+    when: reboot_exist.stat.exists
+    ansible.builtin.set_fact:
+      cacheable: yes
+      reboot_required: true
+
+##############################################
+
+  - name: "Re-run setup to use custom facts"
+    setup: ~
+
+##############################################
+
   - name: Copy Ansible facts to a file
     copy:
       content: "{{ ansible_facts }}"

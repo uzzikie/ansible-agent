@@ -2,6 +2,7 @@
   hosts: localhost
   connection: local 
   tasks:
+
 ##############################################
 
   - name: Check cPanel file exists
@@ -19,6 +20,7 @@
     when: cpanel_exist.stat.exists
     shell:
       "rpm -qa | grep imunify-antivirus"
+    ignore_errors: true
     register: imunifyav
 
   - name: Setting cPanel facts
@@ -53,6 +55,20 @@
       cacheable: yes
       plesk_version: "{{ plesk.stdout }}"
       plesk_imunifyav: "{{ imunifyav.stdout }}"
+
+##############################################
+
+  - name: Get Sentinel EDR Info
+    shell:
+      "rpm -qa | grep -i sentinel"
+    ignore_errors: true
+    register: sentinel
+
+  - name: Setting Sentinel facts
+    ansible.builtin.set_fact:
+      cacheable: yes
+      sentinel_agent: "{{ sentinel.stdout }}"
+
 
 ##############################################
 

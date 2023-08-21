@@ -47,6 +47,7 @@
     when: plesk_exist.stat.exists
     shell:
       "plesk bin extension -l | grep ImunifyAV"
+    ignore_errors: true  
     register: imunifyav
 
   - name: Setting Plesk facts

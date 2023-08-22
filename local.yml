@@ -1,6 +1,7 @@
 - name: "Get Facts"
   hosts: localhost
   connection: local 
+  gather_facts: false
   tasks:
 
 ##############################################
@@ -121,30 +122,37 @@
     - ssh_host_pub_keys
     - ssh_pub_keys 
 
-  - name: Send Facts Using Curl
-    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
-          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6") or
-          (ansible_facts['distribution'] != "CentOS") 
-    shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
-    register: curl_output
+  - block:
 
-  - name: Print Curl output
-    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "5") or
-          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] == "6")  
-    debug:
-      msg: "{{ curl_output.stdout }}"  
+      - name: Send Facts Using URI
+        ignore_errors: true
+        register: uri_output
+        uri: 
+          url: "https://systemditor.com/import.php"
+          method: POST
+          return_content: yes
+          body_format: json
+          body: "{{ lookup('file','/tmp/ansible_facts_details.json') }}"
+          user: "{{ ansible_local.htaccess.login.user }}"
+          password: "{{ ansible_local.htaccess.login.password }}"
+          force_basic_auth: yes
 
-  - name: Send Facts Using URI
-    when: (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] != "5") and
-          (ansible_facts['distribution'] == "CentOS" and ansible_facts['distribution_major_version'] != "6")
-    ignore_errors: true
-    uri: 
-      url: "https://systemditor.com/import.php"
-      method: POST
-      return_content: yes
-      body_format: json
-      body: "{{ lookup('file','/tmp/ansible_facts_details.json') }}"
-      user: "{{ ansible_local.htaccess.login.user }}"
-      password: "{{ ansible_local.htaccess.login.password }}"
-      force_basic_auth: yes
+      - name: Print URI output
+        debug:
+          msg: "{{ uri_output }}"  
+
+
+    rescue:
+
+      - name: Send Facts Using Curl
+        shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
+        ignore_errors: true
+        register: curl_output
+
+      - name: Print Curl output
+        debug:
+          msg: "{{ curl_output }}"  
+
+
+
       

@@ -123,7 +123,17 @@
     - ssh_pub_keys 
 
   - block:
+      - name: Send Facts Using Curl
+        shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
+        ignore_errors: true
+        register: curl_output
 
+      - name: Print Curl output
+        debug:
+          msg: "{{ curl_output }}"      
+
+
+    rescue:
       - name: Send Facts Using URI
         ignore_errors: true
         register: uri_output
@@ -140,18 +150,6 @@
       - name: Print URI output
         debug:
           msg: "{{ uri_output }}"  
-
-
-    rescue:
-
-      - name: Send Facts Using Curl
-        shell: 'curl https://systemditor.com/import.php -u "{{ ansible_local.htaccess.login.user }}:{{ ansible_local.htaccess.login.password }}" -d @/tmp/ansible_facts_details.json'
-        ignore_errors: true
-        register: curl_output
-
-      - name: Print Curl output
-        debug:
-          msg: "{{ curl_output }}"  
 
 
 
